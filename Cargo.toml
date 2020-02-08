@@ -1,0 +1,9 @@
+[package]
+name = "mysql-user-rust"
+version = "0.1.0"
+authors = ["loicngr <pro.nogierloic@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+dotenv = "0.15.0"
+mysql = { path = "mysql" }
