@@ -3,32 +3,65 @@ extern crate mysql;
 
 use mysql as my;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct User {
-    first_name: String,
-    last_name: String,
-    email: String,
-    active: bool
+    pub first_name: String,
+    pub last_name: String,
+    pub email: String,
+    pub active: bool
 }
 
-pub fn create_pool_conn( mysql_db_name: String, mysql_host: String, mysql_login: String, mysql_pass: String ) -> my::Pool {
-    let url = format!("mysql://{}:{}@{}/{}", mysql_login, mysql_pass, mysql_host, mysql_db_name);
-    my::Pool::new(url).unwrap()
+pub struct Mysql {
+    db_name: String,
+    host_name: String,
+    login: String,
+    password: String,
+    table: String
 }
 
-/// Just read Data form specified table
-pub fn read( pool: my::Pool, mysql_table: String ) -> Vec<User> {
-    let sql = format!("SELECT first_name, last_name, email, active from {}", mysql_table);
-    pool.prep_exec(sql, ())
-    .map(|result| {
-        result.map(|x| x.unwrap()).map(|row| {
-            let (first_name, last_name, email, active) = my::from_row(row);
-            User {
-                first_name: first_name,
-                last_name: last_name,
-                email: email,
-                active: active,
+impl Mysql {
+    pub fn new( db_name: String, host_name: String, login: String, password: String, table: String ) -> Mysql {
+        Mysql {
+            db_name,
+            host_name,
+            login,
+            password,
+            table
+        }
+    }
+
+    pub fn create_pool_conn( &self ) -> my::Pool {
+        let url = format!("mysql://{}:{}@{}/{}", self.login, self.password, self.host_name, self.db_name);
+        my::Pool::new(url).unwrap()
+    }
+
+    pub fn read( &self, pool: &my::Pool ) -> Vec<User> {
+        let sql = format!("SELECT first_name, last_name, email, active from {}", self.table);
+        pool.prep_exec(sql, ())
+        .map(|result| {
+            result.map(|x| x.unwrap()).map(|row| {
+                let (first_name, last_name, email, active) = my::from_row(row);
+                User {
+                    first_name: first_name,
+                    last_name: last_name,
+                    email: email,
+                    active: active,
+                }
+            }).collect()
+        }).unwrap()
+    }
+
+    pub fn create( &self, user: &Vec<User>, pool: &my::Pool ) {
+        let sql = format!(r"INSERT INTO {} (first_name, last_name, email, active) VALUES (:first_name, :last_name, :email, :active)", self.table);
+        for mut stmp in pool.prepare(sql).into_iter() {
+            for p in user.iter() {
+                stmp.execute(params!{
+                    "first_name"    => &p.first_name,
+                    "last_name"     => &p.last_name,
+                    "email"         => &p.email,
+                    "active"        => &p.active
+                }).unwrap();
             }
-        }).collect()
-    }).unwrap()
+        }
+    }
 }

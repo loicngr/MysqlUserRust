@@ -22,9 +22,15 @@ fn main() {
         else if key == "MYSQL_TABLE" { mysql_table = String::from(value) }
     }
 
-    let pool = my::create_pool_conn( mysql_db_name, mysql_host, mysql_login, mysql_pass );
+    let mysql_controller = my::Mysql::new( mysql_db_name, mysql_host, mysql_login, mysql_pass, mysql_table );
+    let pool = mysql_controller.create_pool_conn();
 
-    let users: Vec<my::User> = my::read( pool, mysql_table );
+    let new_users = vec![
+        my::User { first_name: String::from("loic"), last_name: String::from("NOGIER"), email: String::from("test@email.fr"), active: false },
+        my::User { first_name: String::from("paul"), last_name: String::from("BONS"), email: String::from("test2@email.fr"), active: false }
+    ];
+    mysql_controller.create( &new_users, &pool );
 
+    let users: Vec<my::User> = mysql_controller.read( &pool );
     println!("{:?}", users);
 }
