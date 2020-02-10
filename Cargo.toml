@@ -6,4 +6,4 @@ edition = "2018"
 
 [dependencies]
 dotenv = "0.15.0"
-mysql = { path = "mysql" }
+crud = { path = "crud" }

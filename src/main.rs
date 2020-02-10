@@ -1,10 +1,10 @@
-extern crate mysql;
+extern crate crud;
 extern crate dotenv;
 
 use std::io::Result;
-use mysql as my;
 use dotenv::dotenv;
 use std::env;
+use crud as mysql;
 
 fn main() -> Result<()> {
     dotenv().ok();
@@ -23,7 +23,7 @@ fn main() -> Result<()> {
         else if key == "MYSQL_TABLE" { mysql_table = String::from(value) }
     }
 
-    let mysql_controller = my::Mysql::new( mysql_db_name, mysql_host, mysql_login, mysql_pass, mysql_table );
+    let mysql_controller = mysql::Mysql::new( mysql_db_name, mysql_host, mysql_login, mysql_pass, mysql_table );
     let pool = match mysql_controller.create_pool_conn() {
         Ok(i) => i,
         Err(err) => panic!("{}", err),
@@ -40,12 +40,12 @@ fn main() -> Result<()> {
     };
 
     let new_users = vec![
-        my::User { first_name: String::from("loic"), last_name: String::from("NOGIER"), email: String::from("test@email.fr"), active: false },
-        my::User { first_name: String::from("paul"), last_name: String::from("BONS"), email: String::from("test2@email.fr"), active: false }
+        mysql::User { first_name: String::from("loic"), last_name: String::from("NOGIER"), email: String::from("test@email.fr"), active: false },
+        mysql::User { first_name: String::from("paul"), last_name: String::from("BONS"), email: String::from("test2@email.fr"), active: false }
     ];
     mysql_controller.create( &new_users, &pool );
 
-    let users: Vec<my::User> = mysql_controller.read( &pool );
+    let users: Vec<mysql::User> = mysql_controller.read( &pool );
     println!("{:?}", users);
 
     Ok(())
