@@ -59,15 +59,47 @@ impl Mysql {
         let sql = format!(r"INSERT INTO {} (first_name, last_name, email, active) VALUES (:first_name, :last_name, :email, :active)", self.table);
         for mut stmp in pool.prepare(sql).into_iter() {
             for p in user.iter() {
+                let current_user = p.clone();
                 stmp.execute(params!{
-                    "first_name"    => &p.first_name,
-                    "last_name"     => &p.last_name,
-                    "email"         => &p.email,
-                    "active"        => &p.active
+                    "first_name"    => current_user.first_name,
+                    "last_name"     => current_user.last_name,
+                    "email"         => current_user.email,
+                    "active"        => current_user.active
                 }).unwrap();
             }
         }
     }
 
-    // pub fn drop_table( &self ) -> my::Result
+    pub fn drop_table( &self, pool: &my::Pool ) -> Result<my::QueryResult, my::Error> {
+        let sql = format!("DROP TABLE {}", self.table);
+        let result = match pool.prep_exec(sql, ()) {
+            Ok(i)       => i,
+            Err(err)    => return Err(err)
+        };
+        Ok(result)
+    }
+
+    pub fn trunc_table( &self, pool: &my::Pool ) -> Result<my::QueryResult, my::Error> {
+        let sql = format!("TRUNCATE TABLE {}", self.table);
+        let result = match pool.prep_exec(sql, ()) {
+            Ok(i)       => i,
+            Err(err)    => return Err(err)
+        };
+        Ok(result)
+    }
+
+    pub fn create_table( &self, pool: &my::Pool ) -> Result<my::QueryResult, my::Error> {
+        let sql = format!(r"CREATE TABLE {} ( 
+            id int not null primary key auto_increment, 
+            first_name varchar(50), 
+            last_name varchar(50), 
+            email varchar(50), 
+            active tinyint(1) 
+        )", self.table);
+        let result = match pool.prep_exec(sql, ()) {
+            Ok(i)       => i,
+            Err(err)    => return Err(err)
+        };
+        Ok(result)
+    }
 }

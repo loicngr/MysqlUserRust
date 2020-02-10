@@ -1,11 +1,12 @@
 extern crate mysql;
 extern crate dotenv;
 
+use std::io::Result;
 use mysql as my;
 use dotenv::dotenv;
 use std::env;
 
-fn main() {
+fn main() -> Result<()> {
     dotenv().ok();
 
     let mut mysql_db_name = String::new();
@@ -28,12 +29,24 @@ fn main() {
         Err(err) => panic!("{}", err),
     };
 
-    // let new_users = vec![
-    //     my::User { first_name: String::from("loic"), last_name: String::from("NOGIER"), email: String::from("test@email.fr"), active: false },
-    //     my::User { first_name: String::from("paul"), last_name: String::from("BONS"), email: String::from("test2@email.fr"), active: false }
-    // ];
-    // mysql_controller.create( &new_users, &pool );
+    match mysql_controller.trunc_table( &pool ) {
+        Ok(_) => println!("Table was truncated !"),
+        Err(_) => {
+            match mysql_controller.create_table( &pool ) {
+                Ok(_) => println!("Table Created !"),
+                Err(err) => panic!("{}", err),
+            };
+        },
+    };
+
+    let new_users = vec![
+        my::User { first_name: String::from("loic"), last_name: String::from("NOGIER"), email: String::from("test@email.fr"), active: false },
+        my::User { first_name: String::from("paul"), last_name: String::from("BONS"), email: String::from("test2@email.fr"), active: false }
+    ];
+    mysql_controller.create( &new_users, &pool );
 
     let users: Vec<my::User> = mysql_controller.read( &pool );
     println!("{:?}", users);
+
+    Ok(())
 }
