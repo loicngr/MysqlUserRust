@@ -30,9 +30,13 @@ impl Mysql {
         }
     }
 
-    pub fn create_pool_conn( &self ) -> my::Pool {
+    pub fn create_pool_conn( &self ) -> Result<my::Pool, my::Error> {
         let url = format!("mysql://{}:{}@{}/{}", self.login, self.password, self.host_name, self.db_name);
-        my::Pool::new(url).unwrap()
+        let pool = match my::Pool::new(url) {
+            Ok(i)  => i,
+            Err(e) => return Err(e),
+        };
+        Ok(pool)
     }
 
     pub fn read( &self, pool: &my::Pool ) -> Vec<User> {
@@ -64,4 +68,6 @@ impl Mysql {
             }
         }
     }
+
+    // pub fn drop_table( &self ) -> my::Result
 }
